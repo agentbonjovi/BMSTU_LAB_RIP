@@ -1,0 +1,297 @@
+.site{
+    display: flex;
+    width: 100%;
+    height: 100%;
+    align-items: flex-start;
+    background: white
+}
+
+.header{
+    display: flex;
+    padding: 20px;
+    background: #3E8ABF;
+    text-align: center;
+    align-items: center;
+    border-radius: 0 0 36px 36px;
+    justify-content: center;
+}
+
+.page_container{
+    width: 100%;
+    display: flex;
+    justify-content: space-between;
+}
+
+body{
+    width: 100%;
+    height: 100%;
+    margin: 0;
+}
+.header_logo{
+    display: flex;
+    align-items:center;
+    text-decoration: none;
+    text-align: center;
+    color: white;
+    font-family: "Crimson Text";
+    font-size: 30px;
+    font-style: normal;
+    font-weight: 400;
+    line-height: normal;
+    padding-left: 10px;
+}
+
+.button{
+    border-radius: 20px;
+    background: #ECEEF2;
+    border-color:#ECEEF2;
+    cursor: pointer;
+    border-width: 0;
+    padding: 6px 16px;
+    color: #000;
+    font-family: Arial;
+    font-size: 14px;
+    font-weight: 400;
+    text-align: center;
+    text-decoration: none;
+}
+.button:hover{
+    background: #DFE1E7;
+}
+.search_bar{
+    border-color: #FFFFFF;
+    border-width: 0;
+    height: 36px;
+    margin-top: 40px;
+    margin-left: 154px;
+    margin-right: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: nowrap;
+}
+.search_btn{
+    background: #AED2E9;
+}
+.filter_text{
+    border: none;
+    height: 36px;
+    border-radius: 6px;
+    margin: 4px 19px;
+    padding: 4px;
+    padding-left: 12px;
+    background: #AED2E9;
+    outline:none;
+    font-family: Crimson Text;
+    font-size: 16px;
+}
+.station_card_image{
+    object-fit: cover;
+    height: 154px;
+    width: 164px;
+    border-radius: 12px;
+}
+.station_card_title{
+    text-align: center;
+    font-family: Arial;
+    font-size: 20px;
+}
+.station_card_temperature{
+    font-family: Arial;
+    font-size: 48px;
+}
+.station_card{
+    border-radius: 12px;
+    background: #AED2E9;
+    display: flex;
+    width: 220px;
+    height: 334px;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 18px;
+    flex-shrink: 0;
+}
+.station_card_worktime{
+    width: 164px;
+    font-family: "Roboto";
+    text-align: center;
+    font-size: 16px;
+}
+.stations_container{
+    display: flex;
+    width: 90%;
+    padding: 237px 0px 0px 150px;
+    justify-content: flex-start;
+    align-items: flex-start;
+    gap: 40px;
+    flex-shrink: 0;
+    flex-wrap: nowrap;
+}
+
+.stations_with_search{
+    width: 1000px;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    
+}
+
+.station_information{
+    display: flex;
+    text-decoration: none;
+    color: rgb(0, 0, 0);
+    align-items: center;
+    flex-direction: column;
+    height: 228px;
+    width: 190px;
+    gap:10px;
+    padding: 8px;
+}
+.station_information:hover{
+    border-radius: 4px;
+    box-shadow: 0 8px 16px 0 rgba(0, 0, 0, .12), 0 0 1px 1px rgba(0, 0, 0, .08);
+}
+.report_card_container{
+    display: flex;
+    width: auto;
+    height: auto;
+    padding: 40px 67px 0px 68px;
+    flex-direction: column;
+    align-items: center;
+}
+
+.report_card{
+    border-radius: 12px;
+    font-family: Arial;
+    display: flex;
+    flex-direction: column;
+    background: #AED2E9;
+    gap: 25px;
+    padding: 14px 21px 10px 21px;
+    width: 304px;
+    align-items: center;
+}
+
+.bold{
+    font-weight: bold;
+}
+
+.description_card_location{
+    display: flex;
+    flex-direction: column;
+    font-size: 36px;
+    font-family: "Helvetica Neue";
+    padding: 121px 48px;
+    gap: 30px;
+}
+.location_description{
+    display: flex;
+    flex-direction: column;
+    font-size: 24px;
+    font-family: "Helvetica Neue"; 
+    padding: 121px 10px 10px 0px;
+    gap: 53px;
+}
+.description_card{
+    display: flex;
+    background-color: #FFFFFF;
+    border-radius: 10px;
+    margin-left: auto;
+    margin-right: auto;
+    margin-top: 60px;
+    width: 1110px;
+    height: 594px;
+    gap: 74px;
+}
+.description_field_container{
+    display: flex;
+    flex-direction: column;
+    margin-right: 40px;
+    gap: 10px;
+}
+.thin{
+    font-weight: 200;
+}
+#description_photo{
+    width: 437px;
+    height: 269px;
+    object-fit: cover;
+    border-radius: 12px;
+}
+
+.report_info_container{
+    font-family: "Helvetica Neue"; 
+    font-size: 40px;
+    width: 1072px;
+    margin-left: auto;
+    margin-right: auto;
+    background: #FFFFFF;
+    border-radius: 12px;
+    margin-top: 30px;
+    padding:35px;
+}
+.report_info_content{
+    display: flex;
+    flex-direction: column;
+    font-size: 24px;
+    margin-left: 105px;
+    margin-right: 105px;
+    margin-top: 97px;
+    gap: 40px;
+}
+
+.station_report{
+    display: flex;
+    background: #ECEEF2;
+    border-radius: 12px;
+    justify-content: space-between;
+    align-items: center;
+}
+.temperature_input{
+    background: #FFFFFF;
+    border: 1px solid rgba(0, 0, 0, 0.25);
+    border-radius: 12px;
+    font-size: 24px;
+    height: 45px;
+    padding-left: 15px;
+    margin: 6px;
+    margin-right: 19px;
+    width: 230px;
+}
+#save_button{
+    font-size: 20px;
+    margin-left: 329px;
+    margin-right: auto;
+}
+
+.report_content_image{
+    width: 164px;
+    height: 106px;
+    border-radius: 12px;
+    margin:16px
+}
+.report_content_station{
+    display: flex;
+    align-items: center;
+}
+
+.report_page_title{
+    display: flex;
+    gap:245px;   
+}
+
+.date_input_block{
+    display:flex;
+    background:#ECEEF2;
+    border-radius: 12px;
+    font-size: 24px;
+    padding: 12px;
+    align-items: center;
+    gap:20px;
+}
+.report_date_input{
+    border:none;
+    background:#ECEEF2;
+    font-size: 24px;
+    width: 120px;
+}
