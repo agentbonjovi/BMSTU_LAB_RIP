@@ -2,16 +2,16 @@
 {% block page %}
     <div class="description_card">
         <div class="description_card_location">
-            <img id="description_photo" src='{{photo}}'>
-            <span>{{fullName}}</span>
+            <img id="description_photo" src='{{station.photo_url}}'>
+            <span class="thin">{{station.full_name}}</span>
         </div>
         <div class="location_description">
             <div class="description_field_container">
                 <span class="bold">Адрес:</span>
-                <span class="thin">{{adress}}</span>
+                <span class="thin">{{station.address}}</span>
             </div>
             <div class="description_field_container">
-                <span class="thin">{{description}}</span>
+                <span class="thin">{{station.description}}</span>
             </div>
         </div>
     </div>

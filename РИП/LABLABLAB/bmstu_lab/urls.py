@@ -20,9 +20,11 @@ from django.urls import path
 
 urlpatterns = [
     path('admin/', admin.site.urls),
-    path('', views.electrocars_view),
+    path('', views.stationsPage),
     path('description/<int:id>',views.description),
     path('report/<int:id>',views.reportInfo),
+    path('add-to-report/<int:station_id>', views.add_station_to_report, name="add_station_to_report"),
+    path('delete-report/<int:report_id>', views.delete_report, name="delete_report"),
 ]
 
 

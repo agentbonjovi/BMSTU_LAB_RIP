@@ -34,7 +34,7 @@ body{
     text-align: center;
     color: white;
     font-family: "Crimson Text";
-    font-size: 30px;
+    font-size: 45px;
     font-style: normal;
     font-weight: 400;
     line-height: normal;
@@ -125,7 +125,7 @@ body{
     align-items: flex-start;
     gap: 40px;
     flex-shrink: 0;
-    flex-wrap: nowrap;
+    flex-wrap: wrap;
 }
 
 .stations_with_search{
@@ -166,9 +166,10 @@ body{
     display: flex;
     flex-direction: column;
     background: #AED2E9;
-    gap: 25px;
+    gap: 17px;
     padding: 14px 21px 10px 21px;
-    width: 304px;
+    width: 161px;
+    height: 98px;
     align-items: center;
 }
 
@@ -194,7 +195,7 @@ body{
 }
 .description_card{
     display: flex;
-    background-color: #FFFFFF;
+    background-color: #E8F6FF;
     border-radius: 10px;
     margin-left: auto;
     margin-right: auto;
@@ -242,7 +243,7 @@ body{
 
 .station_report{
     display: flex;
-    background: #ECEEF2;
+    background: #AED2E9;
     border-radius: 12px;
     justify-content: space-between;
     align-items: center;
@@ -282,16 +283,21 @@ body{
 
 .date_input_block{
     display:flex;
-    background:#ECEEF2;
+    background:#ffffff;
     border-radius: 12px;
     font-size: 24px;
     padding: 12px;
     align-items: center;
-    gap:20px;
+    gap: 40px;
+    text-wrap: nowrap;
 }
 .report_date_input{
     border:none;
-    background:#ECEEF2;
+    background:#ffffff;
     font-size: 24px;
     width: 120px;
+}
+#bin_image{
+    background-color: #FFFFFF;
+    width: 80px;
 }

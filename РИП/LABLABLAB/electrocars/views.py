@@ -1,60 +1,64 @@
-from django.shortcuts import render
-
+from django.shortcuts import render, get_object_or_404, redirect
 from django.http import HttpRequest
-
-stations = list()
-station = {'id':0,'photo':'http://localhost:9000/bucket1/1.png','shortName':'Энергия Москвы',
-            'fullName':'Зарядная станция "Энергия Москвы"',
-            'adress':'115054, г.Москва, ул. Бахрушина, 20','description':
-            "Типы подключения зарядного устройства: type 2. Станция рассчитана на подключение до 2-х автомобилей одновременно.",
-            'work_time':"круглосуточно"}
-stations.append(station)
-station = {'id':1,'photo':'http://localhost:9000/bucket1/2.png','shortName':'Фора Charging Station',
-            'fullName':'Зарядная станция "Фора"',
-            'adress':'142770, г.Москва, Коммунарка, стоянка гипермаркета "Глобус"','description':
-            "Типы подключения зарядного устройства: type 2 - 22.0 кВт, розетка - 3.6 кВт. Станция рассчитана на подключение одного автомобиля.",
-            'work_time':"круглосуточно"}
-stations.append(station)
-station = {'id':2,'photo':'http://localhost:9000/bucket1/3.png','shortName':'EV-Time Charging Station',
-            'fullName':'Зарядная станция "EV-Time"',
-            'adress':'121353, г.Москва, МКАД, 51-й километр','description':
-            "Типы подключения зарядного устройства: type 2 - 43.0 кВт, CHAdeMO - 50.0 кВт, CCS - 50.0 кВт. Станция рассчитана на подключение до 3-х автомобилей одновременно.",
-            'work_time':"07:00-22:00"}
-stations.append(station)
-station = {'id':3,'photo':'http://localhost:9000/bucket1/4.png','shortName':'"МосЭнерго" Charging Station',
-            'fullName':'Зарядная станция "МосЭнерго"',
-            'adress':'119048, Москва, ул. Савельева','description':
-            "Типы подключения зарядного устройства: type 2 - 22.0 кВт. Станция рассчитана на подключение одного автомобииля.",
-            'work_time':"круглосуточно"}
-stations.append(station)
+from electrocars.models import Station, Station_report, Power_report
+from django.db import connection, models 
+import datetime
 
 
-reports = list()
-reports.append({'id':0, 'stations':[{'station': stations[0],'power':'1200'},
-                                    {'station': stations[1],'power':'800'}],
-                        'report_date':'13.09.2024'})
-reports.append({'id':1, 'stations':[{'station': stations[0],'power':'1500'},
-                                    {'station': stations[2],'power':'1100'}],
-                        'report_date':'21.09.2024'})
-currentReport = reports[1]
 
-def electrocars_view(request):
+
+def add_station_to_report(request,station_id):
+    station = get_object_or_404(Station, id=station_id)
+    user = request.user
+    try:
+        report = Power_report.objects.get(status='Draft', creator_id = user)
+    except Power_report.DoesNotExist:
+        report = Power_report.objects.create(status='Draft', creator_id = user)
+
+    station_report, created = Station_report.objects.get_or_create(report_id = report, station_id = station)
+    if created:
+        station_report.save()
+
+    return redirect(stationsPage)
+
+def stationsPage(request):
     station_name = request.GET.get("station_name")
-    filteredStations = list()
-    if(not station_name):
-        return render(request, 'main_page.html', {'stations':stations,'filter':"Название станции",'currentReport':currentReport,'count':len(currentReport['stations'])})
+    user = request.user.id
+    currentReport = Power_report.objects.filter(status='Draft', creator_id = user).first()
+    stations_count = 0
+    if currentReport:
+        stations_count = Power_report.objects.get_stations_count(currentReport)
 
-    for station in stations:
-        if station_name.lower() in station['shortName'].lower():
-            filteredStations.append(station)
+    if station_name:
+        stations = Station.objects.filter(status = 'A').filter(short_name__icontains = station_name)
+        return render(request, 'main_page.html', {'stations':stations,'filter':station_name,'currentReport':currentReport,'count':stations_count})
     
-    return render(request, 'main_page.html', {'stations':filteredStations,'filter':station_name,'currentReport':currentReport,'count':len(currentReport['stations'])})
-    
+    stations = Station.objects.filter(status = 'A')
+    return render(request, 'main_page.html', {'stations':stations,'filter':"Название станции",'currentReport':currentReport,'count':stations_count})
+
 
 
 def description(request,id):
-    return render(request,'description.html',stations[id])
+    station = get_object_or_404(Station,id = id)
+    return render(request,'description.html', {'station':station})
 
 
 def reportInfo(request,id):
-    return render(request,'report_page.html', reports[id])
+    try:
+        report = Power_report.objects.get(id=id)
+    except Power_report.DoesNotExist:
+        return redirect(stationsPage)
+    
+    if report is None or report.status == "Deleted":
+        return redirect(stationsPage)
+    
+    stations = list()
+    for station_report in Station_report.objects.filter(report_id = id):
+        stations.append({'station':station_report.station_id,'power':station_report.power})
+    return render(request,'report_page.html', {'report':report,'stations':stations,'report_date':report.report_date.strftime("%d.%m.%Y")})
+
+def delete_report(request, report_id):
+    with connection.cursor() as cursor:
+        cursor.execute("UPDATE reports SET status = 'Deleted' WHERE id = %s", [report_id])
+    
+    return redirect(stationsPage)

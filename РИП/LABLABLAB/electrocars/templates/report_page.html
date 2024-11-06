@@ -2,14 +2,18 @@
 {% block page %}
     <div class="report_info_container">
         <div class="report_page_title">
-            <span class="bold">Регистрация температур</span>
+            <span class="bold">Регистрация расходуемой энергии станцией</span>
             <div class="date_input_block">
-                <span>Дата:  </span>
+                <span>Дата отчета:  </span>
                 <input class="report_date_input" value="{{report_date}}" name="text" type="text">
             </div>
+            <form method="POST" action="{% url 'delete_report' report.id %}">
+                {% csrf_token %}
+                <input type="image" id="bin_image" alt="Удалить" src="http://localhost:9000/bucket1/crocodile.png">
+            </form>
         </div>
         <div class="report_info_content">
-            <span style="font-weight: 500;">Добавленные метеостанции:</span>
+            <span style="font-weight: 500;">Добавленные станции:</span>
             {% for station in stations %}
                 {% include 'report_content.html' with element=station %}
             {% endfor %}
