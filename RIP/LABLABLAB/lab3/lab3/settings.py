@@ -77,8 +77,16 @@ WSGI_APPLICATION = 'lab3.wsgi.application'
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
 DATABASES = {
-    #######
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'CARS_API_DB', 
+        'USER': 'qwerty',
+        'PASSWORD': 'qwe123',
+        'HOST': 'localhost',
+        'PORT': 32768, 
+    }
 }
+
 
 
 # Password validation
@@ -124,8 +132,8 @@ DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 #Minio
 
-AWS_STORAGE_BUCKET_NAME = ######
-AWS_ACCESS_KEY_ID = #####
-AWS_SECRET_ACCESS_KEY = ######
+AWS_STORAGE_BUCKET_NAME = "bucket1"
+AWS_ACCESS_KEY_ID = "GBeNTvvZkKxSvzSI2EeG"
+AWS_SECRET_ACCESS_KEY = "rEtdBnYTwWVfPws7JPSXvIYdhvbSjDcyLykgUiVN"
 AWS_S3_ENDPOINT_URL = 'localhost:9000'
 MINIO_USE_SSL = False

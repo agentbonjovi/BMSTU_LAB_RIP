@@ -1,3 +1,234 @@
-from django.shortcuts import render
+from rest_framework.response import Response
+from django.shortcuts import get_object_or_404
+from rest_framework import status
+from ElectrocarsAPI.serializers import *
+from ElectrocarsAPI.models import *
+from rest_framework.views import APIView
+from rest_framework.decorators import api_view
+from ElectrocarsAPI.minio import add_pic,del_pic
+import datetime
 
-# Create your views here.
+def user():
+    try:
+        user1 = User.objects.get(id=1)
+    except:
+        user1 = AuthUser(id=1, first_name="Дмитрий", last_name="Идрисов", password=1234, username="zavoz322")
+        user1.save()
+    return user1
+
+def moderator():
+    try:
+        moderator = User.objects.get(id=2)
+    except:
+        moderator = AuthUser(id=2, first_name="Александр", last_name="Листов", password=1234, username="AlexListov")
+        moderator.save()
+    return moderator
+
+class StationsList(APIView):
+    model_class = Station
+    serializer_class = StationSerializer
+
+    def get(self, request, format=None):
+        station_name = request.GET.get("station_name")
+        currentReport = Power_report.objects.filter(status='Draft', creator_id = user()).first()
+        if(station_name):
+            stations = self.model_class.objects.filter(status = 'A').filter(short_name__icontains = station_name)
+        else:
+            stations = self.model_class.objects.filter(status = 'A')
+        serializer = self.serializer_class(stations, many=True)
+        if(not currentReport):
+            data = {"current_report":None, "stations_count":0, "stations":serializer.data}
+            return Response(data)
+        data = {"current_report":currentReport.id,"stations_count":Power_report.objects.get_stations_count(currentReport),
+                "stations":serializer.data}
+        return Response(data)
+
+    def post(self, request, format=None):
+        serializer = self.serializer_class(data=request.data)
+        if serializer.is_valid():
+            station = serializer.save()
+            return Response(serializer.data, status=status.HTTP_201_CREATED)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+class StationDetail(APIView):
+    model_class = Station
+    serializer_class = StationSerializer
+
+    def get(self, request, id, format=None):
+        station = get_object_or_404(self.model_class, id=id)
+        if station.status == 'D':
+            return Response(data="station is deleted",status=status.HTTP_400_BAD_REQUEST)
+        serializer = self.serializer_class(station)
+        return Response(serializer.data)
+
+    def put(self, request, id, format=None):
+        station = get_object_or_404(self.model_class, id=id)
+        serializer = self.serializer_class(station, data=request.data, partial=True)
+        if 'pic' in serializer.initial_data:
+            pic_result = add_pic(station, serializer.initial_data['pic'])
+            if 'error' in pic_result.data:
+                return pic_result
+        if serializer.is_valid():
+            serializer.save()
+            return Response(serializer.data)
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    def delete(self, request, id, format=None):
+        station = get_object_or_404(self.model_class, id=id)
+        station.status = "D"
+        station.save()
+        del_pic(station)
+        return Response(status=status.HTTP_204_NO_CONTENT)
+    
+class ReportDetail(APIView):
+    def get(self, request, id, format=None):
+        report = get_object_or_404(Power_report, id=id)
+        if report.status == 'Deleted':
+            return Response(data="report is deleted",status=status.HTTP_400_BAD_REQUEST)
+        stations_in_report = Station_report.objects.filter(report_id = report)
+        report_serializer = Power_reportSerializer(report)
+        stations_in_report_serializer = Station_reportSerializer(stations_in_report, many = True)
+        data = report_serializer.data | {'stations':stations_in_report_serializer.data}
+        return Response(data)
+    
+    def put(self, request, id, format=None):
+        report = get_object_or_404(Power_report,id=id)
+        if report.status == 'Deleted':
+            return Response(data="report is deleted",status=status.HTTP_400_BAD_REQUEST)
+        report_date = request.data['report-date']
+        report_date = datetime.datetime.strptime(report_date,"%d.%m.%Y")
+        report.report_date = report_date
+        report.save()
+        return Response(status=status.HTTP_200_OK)
+
+@api_view(['Get'])
+def get_reports(request, format=None):
+    filter_status = request.GET.get("status")
+    start_date = request.GET.get("start-date")
+    end_date = request.GET.get("end-date")
+    reports = Power_report.objects.exclude(status='Draft').exclude(status="Deleted")
+    if(filter_status):
+        reports = reports.filter(status = filter_status.capitalize())
+    if(start_date):
+        start_date = datetime.datetime.strptime(start_date,"%d.%m.%Y")
+        reports = reports.filter(formation_date__gte = start_date)
+    if(end_date):
+        end_date = datetime.datetime.strptime(end_date,"%d.%m.%Y")
+        reports = reports.filter(formation_date__lte = end_date)
+    serializer = Power_reportsSerializer(reports, many=True)
+    return Response(serializer.data)
+
+@api_view(['Put'])
+def form_report(request,id,format=None):
+    report = get_object_or_404(Power_report,id=id)
+    if report.status == 'Deleted':
+        return Response(data="report is deleted",status=status.HTTP_400_BAD_REQUEST)
+    if report.status != 'Draft':
+        return Response(data="report has already been formed",status=status.HTTP_400_BAD_REQUEST)
+    report.formation_date = now()
+    report.status = "Formed"
+    report.save()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['Put'])
+def confirm_report(request,id,format=None):
+    report = get_object_or_404(Power_report,id=id)
+    if report.status == 'Deleted':
+        return Response(data="report is deleted",status=status.HTTP_400_BAD_REQUEST)
+    if report.status == 'Draft':
+        return Response(data="report is in draft",status=status.HTTP_400_BAD_REQUEST)
+    if report.status != 'Formed':
+        return Response(data="report has already been confirmed/declined",status=status.HTTP_400_BAD_REQUEST)
+    confirm = request.data['confirm']
+    if confirm == '1':
+        report.status = 'Completed'
+        report.moderator_id = moderator()
+        report.sum_power = Power_report.objects.get_sum_power(report)
+        report.completion_date = now()
+        report.save()
+        return Response(status=status.HTTP_200_OK)
+    if confirm == '0':
+        report.status = 'Rejected'
+        report.moderator_id = moderator()
+        report.completion_date = now()
+        report.save()
+        return Response(status=status.HTTP_200_OK)
+    else:
+        return Response(status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['Delete'])
+def delete_report(request,id,format=None):
+    report = get_object_or_404(Power_report,id=id)
+    report.status = 'Deleted'
+    report.save()
+    return Response(status=status.HTTP_204_NO_CONTENT)
+
+@api_view(['Post'])
+def post_pic(request, id, format=None):
+    station = get_object_or_404(Station,id=id)
+    pic = request.FILES.get("pic")
+    pic_result = add_pic(station, pic)
+    if 'error' in pic_result.data:
+        return pic_result
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['Post'])
+def add_to_report(request, id, format=None):
+    station = get_object_or_404(Station, id=id)
+    if station.status == 'D':
+        return Response(data="station is deleted",status=status.HTTP_400_BAD_REQUEST)
+    try:
+        report = Power_report.objects.get(status='Draft', creator_id = user())
+    except Power_report.DoesNotExist:
+        report = Power_report.objects.create(status='Draft', creator_id = user())
+
+    station_report, created = Station_report.objects.get_or_create(report_id = report, station_id = station)
+    if created:
+        station_report.save()
+        return Response(status=status.HTTP_201_CREATED)
+    return Response(data="station already added",status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['Delete'])
+def remove_from_report(request, report_id, station_id, format=None):
+    report = get_object_or_404(Power_report, id=report_id)
+    if report.status != 'Draft':
+        return Response(data="report is not in draft",status=status.HTTP_400_BAD_REQUEST)
+    station = get_object_or_404(Station, id = station_id)
+    Station_report.objects.filter(report_id = report, station_id = station).delete()
+    return Response(status=status.HTTP_200_OK)
+
+@api_view(['Put'])
+def put_power(request, report_id, station_id, format=None):
+    report = get_object_or_404(Power_report, id=report_id)
+    if report.status != 'Draft':
+        return Response(data="report is not in draft",status=status.HTTP_400_BAD_REQUEST)
+    station = get_object_or_404(Station, id = station_id)
+    station_report = get_object_or_404(Station_report, station_id = station, report_id = report)
+    station_report.power = request.data['power']
+    station_report.save()
+    return Response(status=status.HTTP_200_OK)
+    
+@api_view(['Post'])
+def registration(request, format=None):
+    serializer = UserSerializer(data = request.data)
+    if serializer.is_valid():
+        user = serializer.save()
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['Put'])
+def put_user(request, id, format=None):
+    station = get_object_or_404(User, id=id)
+    serializer = UserSerializer(station, data=request.data, partial=True)
+    if serializer.is_valid():
+        serializer.save()
+        return Response(serializer.data)
+    return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+@api_view(['Post'])
+def authentication(request, format=None):
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
+
+@api_view(['Post'])
+def deauthorization(request,format=None):
+    return Response(status=status.HTTP_405_METHOD_NOT_ALLOWED)
