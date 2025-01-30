@@ -36,11 +36,18 @@ INSTALLED_APPS = [
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
-    'django.contrib.staticfiles',
-
+    'django.contrib.staticfiles',  #Необходим для  swagger ui's css/js файлов (По умолчанию включен)
+    
+    'drf_yasg',
     'rest_framework',
     'ElectrocarsAPI',
 ]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.SessionAuthentication',
+    ],
+}
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -79,14 +86,13 @@ WSGI_APPLICATION = 'lab3.wsgi.application'
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'CARS_API_DB', 
+        'NAME': 'CARS_lab4', 
         'USER': 'qwerty',
         'PASSWORD': 'qwe123',
         'HOST': 'localhost',
         'PORT': 32768, 
     }
 }
-
 
 
 # Password validation
@@ -137,3 +143,10 @@ AWS_ACCESS_KEY_ID = "GBeNTvvZkKxSvzSI2EeG"
 AWS_SECRET_ACCESS_KEY = "rEtdBnYTwWVfPws7JPSXvIYdhvbSjDcyLykgUiVN"
 AWS_S3_ENDPOINT_URL = 'localhost:9000'
 MINIO_USE_SSL = False
+
+#AuthUser
+AUTH_USER_MODEL = 'ElectrocarsAPI.CustomUser'
+
+#redis
+REDIS_HOST = 'localhost'
+REDIS_PORT = 6380
