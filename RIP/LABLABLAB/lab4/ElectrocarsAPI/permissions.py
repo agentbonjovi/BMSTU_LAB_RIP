@@ -7,6 +7,7 @@ session_storage = redis.Redis(host='localhost', port=6380, db=0)
 class IsManager(permissions.BasePermission):
     def has_permission(self, request, view):
         try:
+            print (request.COOKIES)
             ssid = request.COOKIES["session_id"]
             username = session_storage.get(ssid)
             user = CustomUser.objects.get(username = username.decode("utf-8"))
@@ -19,6 +20,7 @@ class IsManagerOrGetOnly(permissions.BasePermission):
         if(request.method == "GET"):
             return True
         try:
+            print (request.COOKIES)
             ssid = request.COOKIES["session_id"]
             username = session_storage.get(ssid)
             user = CustomUser.objects.get(username = username.decode("utf-8"))
@@ -31,6 +33,7 @@ class IsManagerOrGetOnly(permissions.BasePermission):
 class IsAuthenticated(permissions.BasePermission):
     def has_permission(self, request, view):
         try:
+            print (request.COOKIES)
             ssid = request.COOKIES["session_id"]
             username = session_storage.get(ssid)
             user = CustomUser.objects.get(username = username.decode("utf-8"))

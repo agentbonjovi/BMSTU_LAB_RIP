@@ -37,10 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',  #Необходим для  swagger ui's css/js файлов (По умолчанию включен)
-    
+    'django_extensions',
     'drf_yasg',
     'rest_framework',
     'ElectrocarsAPI',
+    'corsheaders',
 ]
 
 REST_FRAMEWORK = {
@@ -50,6 +51,7 @@ REST_FRAMEWORK = {
 }
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
@@ -57,6 +59,7 @@ MIDDLEWARE = [
     'django.contrib.auth.middleware.AuthenticationMiddleware',
     'django.contrib.messages.middleware.MessageMiddleware',
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
+    'django.middleware.common.CommonMiddleware',
 ]
 
 ROOT_URLCONF = 'lab3.urls'
@@ -150,3 +153,4 @@ AUTH_USER_MODEL = 'ElectrocarsAPI.CustomUser'
 #redis
 REDIS_HOST = 'localhost'
 REDIS_PORT = 6380
+

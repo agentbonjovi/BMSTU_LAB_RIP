@@ -51,6 +51,7 @@ class Power_report(models.Model):
     creator_id = models.ForeignKey(CustomUser,related_name="reports_created", on_delete=models.SET_DEFAULT,default=0)
     moderator_id = models.ForeignKey(CustomUser, related_name='reports_moderated', on_delete=models.SET_NULL, null=True)
     sum_power = models.IntegerField(null=True)
+    qr = models.TextField(null=True, blank=True)
 
     objects = Power_report_manager()
 
@@ -62,9 +63,11 @@ class Station_report(models.Model):
     station_id = models.ForeignKey(Station, on_delete=models.SET_DEFAULT, default = 0)
     report_id = models.ForeignKey(Power_report, on_delete=models.SET_DEFAULT, default = 0)   
     power = models.IntegerField(default = 0)
-
+    
     class Meta:
         db_table = "stations_reports"
         constraints = [
             models.UniqueConstraint(fields=['station_id', 'report_id'], name='unique_station_report')
         ]
+
+

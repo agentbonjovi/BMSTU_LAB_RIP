@@ -1,3 +1,4 @@
+from itertools import chain
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from rest_framework import status
@@ -6,7 +7,7 @@ from ElectrocarsAPI.models import *
 from rest_framework.views import APIView
 from rest_framework.decorators import api_view,permission_classes
 from ElectrocarsAPI.minio import add_pic,del_pic
-import datetime
+from datetime import datetime, timedelta
 from drf_yasg.utils import swagger_auto_schema
 from drf_yasg import openapi
 from django.contrib.auth import authenticate, login, logout
@@ -17,6 +18,10 @@ from ElectrocarsAPI.permissions import *
 from django.conf import settings
 import redis
 import uuid
+import segno
+import base64
+from io import BytesIO
+from ElectrocarsAPI.qr_generate import generate_report_qr
 
 session_storage = redis.Redis(host='localhost', port=6380, db=0)
 
@@ -143,9 +148,10 @@ end_date_param = openapi.Parameter('end-date', openapi.IN_QUERY, description="Ф
 @permission_classes([IsAuthenticated])
 def get_reports(request, format=None):
     filter_status = request.GET.get("status")
-    start_date = request.GET.get("start-date")
-    end_date = request.GET.get("end-date")
+    start_date = request.GET.get("startDate")
+    end_date = request.GET.get("endDate")
     user = getUser(request)
+    creator = request.GET.get("creatorName")
     if(user.is_staff or user.is_superuser):
         reports = Power_report.objects.exclude(status='Draft').exclude(status="Deleted")
     else:
@@ -153,11 +159,12 @@ def get_reports(request, format=None):
     if(filter_status):
         reports = reports.filter(status = filter_status.capitalize())
     if(start_date):
-        start_date = datetime.datetime.strptime(start_date,"%d.%m.%Y")
+        start_date = datetime.strptime(start_date,"%Y-%m-%d")
         reports = reports.filter(formation_date__gte = start_date)
     if(end_date):
-        end_date = datetime.datetime.strptime(end_date,"%d.%m.%Y")
+        end_date = datetime.strptime(end_date,"%Y-%m-%d") + timedelta(days=1)
         reports = reports.filter(formation_date__lte = end_date)
+    reports = reports.order_by('id')
     serializer = Power_reportsSerializer(reports, many=True)
     return Response(serializer.data)
 
@@ -192,15 +199,20 @@ def confirm_report(request,id,format=None):
         return Response(data="report is in draft",status=status.HTTP_400_BAD_REQUEST)
     if report.status != 'Formed':
         return Response(data="report has already been confirmed/declined",status=status.HTTP_400_BAD_REQUEST)
-    confirm = request.data['confirm']
-    if confirm == '1':
+    confirm = request.data
+    if confirm == 1:
         report.status = 'Completed'
         report.moderator_id = user
         report.sum_power = Power_report.objects.get_sum_power(report)
         report.completion_date = now()
+        stations_in_report = Station_report.objects.filter(report_id = report)
+        stations_in_report_serializer = Station_reportSerializer(stations_in_report, many = True)
+        stations = stations_in_report_serializer.data
+        generated_qr = generate_report_qr(report,stations)
+        report.qr = generated_qr
         report.save()
         return Response(status=status.HTTP_200_OK)
-    if confirm == '0':
+    if confirm == 0:
         report.status = 'Rejected'
         report.moderator_id = user
         report.completion_date = now()
@@ -231,6 +243,7 @@ pic_param = openapi.Parameter('pic', openapi.IN_QUERY, description="picture", ty
 def post_pic(request, id, format=None):
     station = get_object_or_404(Station,id=id)
     pic = request.FILES.get("pic")
+    print(pic)
     pic_result = add_pic(station, pic)
     if 'error' in pic_result.data:
         return pic_result
@@ -277,7 +290,7 @@ def put_power(request, report_id, station_id, format=None):
         return Response(data="report is not in draft",status=status.HTTP_400_BAD_REQUEST)
     station = get_object_or_404(Station, id = station_id)
     station_report = get_object_or_404(Station_report, station_id = station, report_id = report)
-    station_report.power = request.data['power']
+    station_report.power = request.data
     station_report.save()
     return Response(status=status.HTTP_200_OK)
 
@@ -301,7 +314,7 @@ def put_user(request, format=None):
     user = getUser(request)
     serializer = UserSerializer(user, data=request.data, partial=True)
     if serializer.is_valid():
-        if(request.data.get("username")):
+        if(request.data.get("username")):   
             ssid = request.COOKIES["session_id"]
             session_storage.set(ssid,request.data["username"])       
         serializer.save()
@@ -323,8 +336,9 @@ def authentication(request, format=None):
     if user is not None:
         random_key = uuid.uuid4()
         session_storage.set(str(random_key), username)
-        response = Response(status=status.HTTP_200_OK)
-        response.set_cookie("session_id", random_key)
+        userGroup = "watcher" if not user.is_superuser else "power_analitic"
+        response = Response(data = {"userName":username, "userGroup":userGroup}, status=status.HTTP_200_OK)
+        response.set_cookie("session_id", random_key,samesite="None", secure = "True")
         return response
     else:
         return Response("authentication failed",status=status.HTTP_400_BAD_REQUEST)
@@ -337,3 +351,5 @@ def deauthorization(request,format=None):
     response = Response({'status': 'Success'})
     response.delete_cookie("session_id")
     return response
+
+

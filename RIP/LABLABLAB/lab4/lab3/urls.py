@@ -35,8 +35,8 @@ urlpatterns = [
     path('reports/<int:id>/delete/',views.delete_report,name='delete-report'),
     path('stations-reports/<int:report_id>/<int:station_id>/remove_station/',views.remove_from_report,name='remove-station'),
     path('stations-reports/<int:report_id>/<int:station_id>/put_power/',views.put_power,name='put-power'),
-    path('registration/',views.registration,name='registration'),
-    path('users/<int:id>/',views.put_user,name='put_user'),
+    path('users/registration/',views.registration,name='registration'),
+    path('users/change/',views.put_user,name='put_user'),
     path('users/authentication/',views.authentication,name='authentication'),
     path('users/deauthorization/',views.deauthorization,name='deauthorization'),
 

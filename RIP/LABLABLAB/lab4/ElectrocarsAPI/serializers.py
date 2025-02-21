@@ -33,8 +33,14 @@ class Power_reportSerializer(serializers.ModelSerializer):
     report_date = serializers.DateField(format='%d.%m.%Y')
     class Meta:
         model = Power_report
-        fields = ['status','report_date','creation_date','formation_date','completion_date','creator_id',
-                  'moderator_id','sum_power']
+        fields = ['status',
+                  'report_date',
+                  'creation_date',
+                  'formation_date',
+                  'completion_date',
+                  'creator_id',
+                  'moderator_id',
+                  'sum_power']
 
 class Power_reportsSerializer(serializers.ModelSerializer):
     creator_id = serializers.StringRelatedField(read_only=True)
@@ -46,7 +52,9 @@ class Power_reportsSerializer(serializers.ModelSerializer):
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
         model = CustomUser
-        fields = ['username','password','email']
+        fields = ['username',
+                  'password',
+                  'email']
         
     def create(self, validated_data):
         user = super().create(validated_data)
@@ -66,7 +74,9 @@ class GETStationsSerializer(serializers.Serializer):
     stations_count = serializers.IntegerField(default = 0)
     stations = StationSerializer(many=True)
     class Meta:
-        fields = ['current_report','stations_count',"stations"]
+        fields = ['current_report',
+                  'stations_count',
+                  "stations"]
 
 class GETReportInfoSerializer(serializers.Serializer):
     status = serializers.CharField()
